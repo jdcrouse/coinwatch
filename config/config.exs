@@ -11,7 +11,7 @@ config :coinwatch,
 
 # Configures the endpoint
 config :coinwatch, CoinwatchWeb.Endpoint,
-  url: [host: "localhost"],
+  url: [host: "http://api.coinwatch.pelkey.tech"],
   secret_key_base: "QYoUqAtcq+if4NemZM6ra0e8TXKG7ExCF9MJUT5kjMieBBaCpedsGGgeCgvYB4ZX",
   render_errors: [view: CoinwatchWeb.ErrorView, accepts: ~w(html json)],
   pubsub: [name: Coinwatch.PubSub,

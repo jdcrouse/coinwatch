@@ -180,16 +180,14 @@ defmodule Coinwatch.Assets do
     CoinwatchWeb.Endpoint.broadcast("market_data:all", "market_data", %{market_data: list_market()})
   end
 
-
   # from https://coderwall.com/p/fhsehq/fix-encoding-issue-with-ecto-and-poison
   # to fix Poison encoding error when encoding a struct
   # added :users in sanitize map (they are not preloaded)
-  defimpl Poison.Encoder , for: Any do
+  defimpl Poison.Encoder , for: Coinwatch.Assets.Market do
     def encode(%{__struct__: _} = struct, options) do
       map = struct
         |> Map.from_struct
         |> sanitize_map
-
 
       Poison.Encoder.Map.encode(map, options)
     end
@@ -198,7 +196,6 @@ defmodule Coinwatch.Assets do
       Map.drop(map, [:__meta__, :__struct__, :users])
     end
   end
-
 
   alias Coinwatch.Assets.Notification
 
@@ -392,5 +389,4 @@ defmodule Coinwatch.Assets do
   def get_markets_by_pair(pair) do
     Repo.all(from m in Market, where: m.pair == ^pair)
   end
-
 end

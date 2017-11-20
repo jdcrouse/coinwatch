@@ -2,9 +2,6 @@ defmodule CoinwatchWeb.SessionController do
   use CoinwatchWeb, :controller
   @moduledoc false
 
-  #TODO test this. need to ensure it works
-  # Low priority, given timeline
-
   alias Coinwatch.Accounts.User
   alias Coinwatch.Repo
 
@@ -26,10 +23,12 @@ defmodule CoinwatchWeb.SessionController do
     end
   end
 
-  def refresh(conn, _params) do
+  def refresh(conn, _params \\ {}) do
     user = Guardian.Plug.current_resource(conn)
     jwt = Guardian.Plug.current_token(conn)
 
+    IO.inspect(user)
+    IO.inspect(jwt)
     {:ok, claims} = Guardian.Plug.claims(conn)
 
     case Guardian.refresh!(jwt, claims) do
@@ -38,14 +37,13 @@ defmodule CoinwatchWeb.SessionController do
         |> put_status(:ok)
         |> render("show.json", %{user: user, jwt: new_jwt})
 
-      {:error, _reason} ->
+      _ ->
         conn
         |> put_status(:unauthorized)
         |> render("forbidden.json", error: "Not authenticated")
     end
 
   end
-
 
   def delete(conn, _params) do
     jwt = Guardian.Plug.current_token(conn)
@@ -55,6 +53,14 @@ defmodule CoinwatchWeb.SessionController do
     |> put_status(:ok)
     |> render("delete.json")
   end
+
+  def cors(conn, _params) do
+    conn
+    |> put_status(:ok)
+    |> put_resp_header("Access-Control-Allow-Origin", "*")
+    |> send_resp(:ok, "")
+  end
+
 
   defp authenticate(username, password) do
     user = Repo.get_by(User, username: username)

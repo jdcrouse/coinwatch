@@ -6,7 +6,8 @@ defmodule CoinwatchWeb.UserSocket do
   channel "market_data:*", CoinwatchWeb.MarketDataChannel
 
   ## Transports
-  transport :websocket, Phoenix.Transports.WebSocket
+  transport :websocket, Phoenix.Transports.WebSocket,
+            check_origin: ["http://coinwatch.pelkey.tech", "//*.pelkey.tech"]
   # transport :longpoll, Phoenix.Transports.LongPoll
 
   # Socket params are passed from the client and can

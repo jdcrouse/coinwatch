@@ -52,6 +52,11 @@ defmodule Coinwatch.RelationsTest do
       assert Relations.get_market_user!(mu.id) == mu
     end
 
+    test "get_market_user!/2 returns a market_user with given user_id and market_id" do
+      mu = mu_fixture()
+      assert Relations.get_market_user!(mu.user_id, mu.market_id) == mu
+    end
+
     test "create_market_user/1 with valid data creates a MarketUser" do
       user = user_fixture()
       market = market_fixture()

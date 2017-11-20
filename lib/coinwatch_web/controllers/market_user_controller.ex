@@ -18,6 +18,16 @@ defmodule CoinwatchWeb.MarketUserController do
     end
   end
 
+  def create(conn, %{"user_id" => user_id, "markets" => market_ids}) do
+    with _mus <- Relations.create_all_market_user(user_id, market_ids) do
+      user = Accounts.get_user!(user_id)
+      conn
+      |> put_status(:created)
+      |> put_resp_header("location", user_path(conn, :show, user))
+      |> render("show.json", user: user)
+    end
+  end
+
   def delete(conn, %{"market_user" => params}) do
     mu = Relations.get_market_user!(params)
 
@@ -30,4 +40,15 @@ defmodule CoinwatchWeb.MarketUserController do
       |> render("show.json", user: user)
     end
   end
+
+  def delete(conn, %{"user_id" => user_id, "markets" => market_ids}) do
+    with _mus <- Relations.delete_all_market_user(user_id, market_ids) do
+      user = Accounts.get_user!(user_id)
+      conn
+      |> put_status(:ok)
+      |> put_resp_header("location", user_path(conn, :show, user))
+      |> render("show.json", user: user)
+    end
+  end
+
 end

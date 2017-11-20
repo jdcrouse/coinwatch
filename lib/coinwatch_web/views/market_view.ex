@@ -11,9 +11,12 @@ defmodule CoinwatchWeb.MarketView do
   end
 
   def render("market.json", %{market: market}) do
-    %{id: market.id,
+    %{
+      id: market.id,
       exchange: market.exchange,
       pair: market.pair,
-      rate: market.rate}
+      rate: market.rate,
+      updated: market.updated_at,
+      }
   end
 end
