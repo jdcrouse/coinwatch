@@ -22,8 +22,3 @@ defmodule Coinwatch.Assets.Notification do
     |> validate_required([:pair, :threshold, :high, :notified])
   end
 end
-
-# note = %Coinwatch.Assets.Notification{pair: "BTCUSD", threshold: 340, high: true, notified: false, last_rate: 3}
-
-# Coinwatch.Mailer.send_signup_confirmation(note)
-# Coinwatch.Mailer.send_price_alert_email(note)

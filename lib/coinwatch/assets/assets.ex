@@ -142,6 +142,7 @@ defmodule Coinwatch.Assets do
 
       broadcast_markets()
     end
+    process_notifs()
   end
 
 
