@@ -142,6 +142,7 @@ defmodule Coinwatch.Assets do
 
       broadcast_markets()
     end
+    process_notifs()
   end
 
 
@@ -194,5 +195,198 @@ defmodule Coinwatch.Assets do
     defp sanitize_map(map) do
       Map.drop(map, [:__meta__, :__struct__, :users])
     end
+  end
+
+  alias Coinwatch.Assets.Notification
+
+  @doc """
+  Returns the list of notifications.
+
+  ## Examples
+
+      iex> list_notifications()
+      [%Notification{}, ...]
+
+  """
+  def list_notifications do
+    Repo.all(Notification)
+  end
+
+  @doc """
+  Gets a single notification.
+
+  Raises `Ecto.NoResultsError` if the Notification does not exist.
+
+  ## Examples
+
+      iex> get_notification!(123)
+      %Notification{}
+
+      iex> get_notification!(456)
+      ** (Ecto.NoResultsError)
+
+  """
+  def get_notification!(id), do: Repo.get!(Notification, id)
+
+  @doc """
+  Creates a notification.
+
+  ## Examples
+
+      iex> create_notification(%{field: value})
+      {:ok, %Notification{}}
+
+      iex> create_notification(%{field: bad_value})
+      {:error, %Ecto.Changeset{}}
+
+  """
+  def create_notification(attrs \\ %{}) do
+    %Notification{}
+    |> Notification.changeset(attrs)
+    |> Repo.insert()
+  end
+
+  @doc """
+  Updates a notification.
+
+  ## Examples
+
+      iex> update_notification(notification, %{field: new_value})
+      {:ok, %Notification{}}
+
+      iex> update_notification(notification, %{field: bad_value})
+      {:error, %Ecto.Changeset{}}
+
+  """
+  def update_notification(%Notification{} = notification, attrs) do
+    notification
+    |> Notification.changeset(attrs)
+    |> Repo.update()
+  end
+
+  def update_notification!(%Notification{} = notification, attrs) do
+    notification
+    |> Notification.changeset(attrs)
+    |> Repo.update!()
+  end
+
+  @doc """
+  Deletes a Notification.
+
+  ## Examples
+
+      iex> delete_notification(notification)
+      {:ok, %Notification{}}
+
+      iex> delete_notification(notification)
+      {:error, %Ecto.Changeset{}}
+
+  """
+  def delete_notification(%Notification{} = notification) do
+    Repo.delete(notification)
+  end
+
+  @doc """
+  Returns an `%Ecto.Changeset{}` for tracking notification changes.
+
+  ## Examples
+
+      iex> change_notification(notification)
+      %Ecto.Changeset{source: %Notification{}}
+
+  """
+  def change_notification(%Notification{} = notification) do
+    Notification.changeset(notification, %{})
+  end
+
+  # handles sending notifications when necessary and deleting already notified
+  # notifications
+  def process_notifs() do
+    notifs = list_notifications()
+
+    for notif <- notifs do
+      cond do
+        # if notified, delete
+        notif.notified -> delete_notification(notif)
+        #otherwise, check if it has passed above (or below) desired val
+        notif.high -> check_passed_above(notif)
+        true -> check_passed_below(notif)
+      end
+    end
+  end
+
+  defp check_passed_above(notif) do
+    # if previous value < threshold and current value > threshold,
+      # - notify user
+      # - mark as notified
+    new_notif = update_most_recent_price_high(notif)
+    new_rate = new_notif.last_rate
+
+    if new_rate > Decimal.new(notif.threshold) do
+      Coinwatch.Mailer.send_price_alert_email(new_notif)
+      IO.puts("sent alert email")
+      update_notification!(notif, %{notified: true})
+    end
+  end
+
+  defp check_passed_below(notif) do
+    # if previous value > threshold and current value < threshold,
+      # - notify user
+      # - mark as notified
+      new_notif = update_most_recent_price_low(notif)
+      new_rate = new_notif.last_rate
+
+      IO.puts("new rate: " <> Decimal.to_string(new_rate))
+      IO.puts("threshold: " <> Integer.to_string(notif.threshold))
+
+      if new_rate < Decimal.new(notif.threshold) do
+        Coinwatch.Mailer.send_price_alert_email(new_notif)
+        IO.puts("sent alert email")
+        update_notification!(notif, %{notified: true})
+      end
+  end
+
+  # these next two and their helpers are almost identical and can definitely be
+  # abstracted--need to make sure they work first
+  defp update_most_recent_price_high(notif) do
+    # get markets for a specific pair
+    marks = get_markets_by_pair(notif.pair)
+    high = find_highest_market_above(notif.last_rate, marks)
+    update_notification!(notif, %{last_rate: high})
+  end
+
+  defp find_highest_market_above(rate, [head | tail]) do
+    if head.rate > rate do
+      find_highest_market_above(head.rate, tail)
+    else
+      find_highest_market_above(rate, tail)
+    end
+  end
+
+  defp find_highest_market_above(rate, []) do
+    rate
+  end
+
+  defp update_most_recent_price_low(notif) do
+    # get markets for a specific pair
+    marks = get_markets_by_pair(notif.pair)
+    low = find_lowest_market_below(notif.last_rate, marks)
+    update_notification!(notif, %{last_rate: low})
+  end
+
+  defp find_lowest_market_below(rate, [head | tail]) do
+    if head.rate < rate do
+      find_lowest_market_below(head.rate, tail)
+    else
+      find_lowest_market_below(rate, tail)
+    end
+  end
+
+  defp find_lowest_market_below(rate, []) do
+    rate
+  end
+
+  def get_markets_by_pair(pair) do
+    Repo.all(from m in Market, where: m.pair == ^pair)
   end
 end

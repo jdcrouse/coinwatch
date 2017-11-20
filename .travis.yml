@@ -1,10 +1,13 @@
 language: elixir
 elixir:
-  - 1.5.2
+- 1.5.2
 otp_release:
-  - 20.1
+- 20.1
 notifications:
   email: false
 before_script:
-  - psql -U postgres -c "CREATE USER coinwatch WITH CREATEUSER PASSWORD 'coinwatch';"
-  - psql -U postgres -c "create database coinwatch_test;"
+- psql -U postgres -c "CREATE USER coinwatch WITH CREATEUSER PASSWORD 'coinwatch';"
+- psql -U postgres -c "create database coinwatch_test;"
+before_install:
+- openssl aes-256-cbc -K $encrypted_5f4c96246762_key -iv $encrypted_5f4c96246762_iv
+  -in config.secret.exs.enc -out ./config/config.secret.exs -d

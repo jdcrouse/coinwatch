@@ -39,6 +39,7 @@ defmodule CoinwatchWeb.Router do
 
      options "/users", SessionController, :cors
      resources "/users", UserController, except: [:new, :edit]
+     resources "/notifications", NotificationController, except: [:new, :edit]
 
      options "/market_user", SessionController, :cors
      post "/market_user", MarketUserController, :create

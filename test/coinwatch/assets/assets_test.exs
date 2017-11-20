@@ -102,4 +102,70 @@ defmodule Coinwatch.AssetsTest do
     end
 
   end
+
+  describe "notifications" do
+    alias Coinwatch.Assets.Notification
+
+    @valid_attrs %{high: true, notified: true, pair: "some pair", threshold: 42}
+    @update_attrs %{high: false, notified: false, pair: "some updated pair", threshold: 43}
+    @invalid_attrs %{high: nil, notified: nil, pair: nil, threshold: nil}
+
+    def notification_fixture(attrs \\ %{}) do
+      {:ok, notification} =
+        attrs
+        |> Enum.into(@valid_attrs)
+        |> Assets.create_notification()
+
+      notification
+    end
+
+    test "list_notifications/0 returns all notifications" do
+      notification = notification_fixture()
+      assert Assets.list_notifications() == [notification]
+    end
+
+    test "get_notification!/1 returns the notification with given id" do
+      notification = notification_fixture()
+      assert Assets.get_notification!(notification.id) == notification
+    end
+
+    test "create_notification/1 with valid data creates a notification" do
+      assert {:ok, %Notification{} = notification} = Assets.create_notification(@valid_attrs)
+      assert notification.high == true
+      assert notification.notified == true
+      assert notification.pair == "some pair"
+      assert notification.threshold == 42
+    end
+
+    test "create_notification/1 with invalid data returns error changeset" do
+      assert {:error, %Ecto.Changeset{}} = Assets.create_notification(@invalid_attrs)
+    end
+
+    test "update_notification/2 with valid data updates the notification" do
+      notification = notification_fixture()
+      assert {:ok, notification} = Assets.update_notification(notification, @update_attrs)
+      assert %Notification{} = notification
+      assert notification.high == false
+      assert notification.notified == false
+      assert notification.pair == "some updated pair"
+      assert notification.threshold == 43
+    end
+
+    test "update_notification/2 with invalid data returns error changeset" do
+      notification = notification_fixture()
+      assert {:error, %Ecto.Changeset{}} = Assets.update_notification(notification, @invalid_attrs)
+      assert notification == Assets.get_notification!(notification.id)
+    end
+
+    test "delete_notification/1 deletes the notification" do
+      notification = notification_fixture()
+      assert {:ok, %Notification{}} = Assets.delete_notification(notification)
+      assert_raise Ecto.NoResultsError, fn -> Assets.get_notification!(notification.id) end
+    end
+
+    test "change_notification/1 returns a notification changeset" do
+      notification = notification_fixture()
+      assert %Ecto.Changeset{} = Assets.change_notification(notification)
+    end
+  end
 end

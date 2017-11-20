@@ -42,7 +42,7 @@ defmodule Coinwatch.Mixfile do
       {:gettext, "~> 0.11"},
       {:cowboy, "~> 1.0"},
       {:httpoison, "~> 0.13"},
-      {:poison, "~> 3.1"},
+      {:poison, "~> 3.1", override: true},
       {:quantum, ">= 2.1.1"},
       {:timex, "~> 3.0"},
       {:comeonin, "~> 4.0"},
@@ -50,7 +50,8 @@ defmodule Coinwatch.Mixfile do
       {:cors_plug, "~> 1.2"},
       {:corsica, "~> 1.0"},
       {:guardian, "~> 0.14"},
-      {:distillery, "~> 1.4", runtime: false},
+      {:mailgun, "~> 0.1.2"},
+      {:distillery, "~> 1.4", runtime: false}
     ]
   end
 
